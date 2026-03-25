@@ -2,29 +2,168 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport"content="width=device-width,initial-scale=1.0"/>
     <title>Sport Calendar</title>
-    <link rel="stylesheet" href="src/css/style.css" />
+    <link rel="stylesheet"href="src/css/style.css"/>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar_title">
-            <span class="navbar_name">Calendar</span>
+<nav class="navbar">
+    <div class="navbar_title">
+        <span class="navbar_name">Calendar</span>
+    </div>
+    <button class="navbar_btn"id="openAddModal">+ Add Match</button>
+    <ul class="navbar_links">
+        <li><a href="/" class="navbar_link">Matches</a></li>
+        <li><a href="/pages/teams.html"class="navbar_link">Teams</a></li>
+        <li><a href="/pages/stats.html"class="navbar_link">Stats</a></li>
+    </ul>
+</nav>
+<section class="filters_bar">
+    <div class="filters_inner">
+        <div class="filter_group">
+            <label class="filter_label">Competition</label>
+            <select class="filter_select" id="filterCompetition">
+                <option value="">All</option>
+            </select>
         </div>
-            <button class="navbar_btn" id="openAddData">+ Add Match</button>
-        <ul class="navbar_links">
-            <li><a href="index.html" class="navbar_link">Matches</a></li>
-            <li><a href="pages/teams.html" class="navbar_link">Teams</a></li>
-            <li><a href="pages/stats.html" class="navbar_link">Stats</a></li>
-        </ul>
-    </nav>
-    <section class="filters_bar">
-    </section>
-    <main class="main">
-        <div class="section_header">
-            <h2 class="section_title">Results</h2>
-            <div class="section_line"></div>
+        <div class="filter_group">
+            <label class="filter_label">Status</label>
+            <select class="filter_select" id="filterStatus">
+                <option value="">All</option>
+                <option value="played">Played</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="live">Live</option>
+                <option value="postponed">Postponed</option>
+            </select>
         </div>
-    </main>
+        <div class="filter_group">
+            <label class="filter_label">Date from</label>
+            <input type="date" class="filter_input" id="filterDateFrom" />
+        </div>
+        <div class="filter_group">
+            <label class="filter_label">Date to</label>
+            <input type="date" class="filter_input" id="filterDateTo" />
+        </div>
+        <button class="btn_filter" id="applyFilters">Apply</button>
+        <button class="btn_filter btn_filter_ghost" id="clearFilters">Clear</button>
+    </div>
+</section>
+<main class="main">
+    <div class="section_header">
+        <h2 class="section_title">Results</h2>
+        <div class="section_line"></div>
+    </div>
+    <div class="match_grid" id="matchGrid">
+        <div class="loading_state">
+            <div class="spinner"></div>
+            <p>Loading matches…</p>
+        </div>
+    </div>
+</main>
+<div class="modal_overlay" id="detailModal">
+    <div class="modal">
+        <button class="modal_close" id="closeDetailModal">&#x2715;</button>
+        <div id="detailContent"></div>
+    </div>
+</div>
+<div class="modal_overlay" id="addModal">
+    <div class="modal modal_wide">
+        <button class="modal_close" id="closeAddModal">&#x2715;</button>
+        <h2 class="modal_title">Add New Match</h2>
+        <form id="addForm" novalidate>
+            <div class="form_row">
+                <div class="form_group">
+                    <label class="form_label">Competition Name *</label>
+                    <input class="form_input" name="competition_name" placeholder="e.g. AFC Champions League" required />
+                </div>
+            </div>
+            <div class="form_row">
+                <div class="form_group">
+                    <label class="form_label">Stage *</label>
+                    <select class="form_input" name="_stage_id">
+                        <option value="ROUND OF 16">Round of 16</option>
+                        <option value="QUARTER FINAL">Quarter Final</option>
+                        <option value="SEMI FINAL">Semi Final</option>
+                        <option value="FINAL">Final</option>
+                    </select>
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Season *</label>
+                    <input class="form_input" name="season" type="number" placeholder="e.g. 2024" required />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Status *</label>
+                    <select class="form_input" name="status">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="played">Played</option>
+                        <option value="live">Live</option>
+                        <option value="postponed">Postponed</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form_row">
+                <div class="form_group">
+                    <label class="form_label">Date *</label>
+                    <input class="form_input" name="date_venue" type="date" required />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Time (UTC)</label>
+                    <input class="form_input" name="time_venue_utc" type="time" />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Stadium</label>
+                    <input class="form_input" name="stadium" placeholder="Optional" />
+                </div>
+            </div>
+            <p class="form_section_title">Home Team</p>
+            <div class="form_row">
+                <div class="form_group">
+                    <label class="form_label">Name</label>
+                    <input class="form_input" name="home_name" placeholder="e.g. Al Hilal" />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Slug (ID)</label>
+                    <input class="form_input" name="home_slug" placeholder="e.g. al-hilal-fc" />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Abbr</label>
+                    <input class="form_input" name="home_abbr" maxlength="5" placeholder="HIL" />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Country</label>
+                    <input class="form_input" name="home_country" maxlength="3" placeholder="KSA" />
+                </div>
+            </div>
+            <p class="form_section_title">Away Team</p>
+            <div class="form_row">
+                <div class="form_group">
+                    <label class="form_label">Name</label>
+                    <input class="form_input" name="away_name" placeholder="e.g. Urawa Reds" />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Slug (ID)</label>
+                    <input class="form_input" name="away_slug" placeholder="e.g. urawa-reds-fc" />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Abbr</label>
+                    <input class="form_input" name="away_abbr" maxlength="5" placeholder="RED" />
+                </div>
+                <div class="form_group">
+                    <label class="form_label">Country</label>
+                    <input class="form_input" name="away_country" maxlength="3" placeholder="JPN" />
+                </div>
+            </div>
+            <div id="formError" class="form_error hidden"></div>
+            <div class="form_actions">
+                <button type="submit" class="btn_submit">Create Match</button>
+                <button type="button" class="btn_cancel" id="cancelAdd">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="/src/js/api.js"></script>
+<script src="/src/js/ui.js"></script>
+<script src="/src/js/main.js"></script>
 </body>
 </html>

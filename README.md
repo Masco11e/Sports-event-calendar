@@ -27,10 +27,6 @@ HTML5/CSS3/JS - Application frontend, Single Page Application without external J
 
 pytest - Backend unit and integration tests.
 
-# Project file structure
-
-
-
 # Database
 
 
@@ -63,6 +59,48 @@ The Flask backend provides ... REST endpoints. Each endpoint executes no more th
 
 # User interface
 
+**index.html** — main matches page with:
+- Match grid displaying competition, teams, score or kickoff time, date and status badge
+- Filter bar (competition dropdown, status dropdown, date range inputs)
+- Click on a card opens a detail modal with full match info and events
+- "Add Match" button opens a form modal with client-side field validation
+
+**pages/teams.html** — teams subpage (work in progress)
+
+**pages/stats.html** — statistics subpage (work in progress)
+
 # Tests
 
+Tests are located in `tests/test_app.py` and cover the full backend.
+
+| Class | Tests | What is covered |
+| :--- | :---: | :--- |
+| TestDatabase | 6 | Table creation, seed data, foreign key constraints |
+| TestGetMatches | 9 | Status 200, match count, required fields, all filters |
+| TestGetMatch | 4 | Status 200, 404 for missing, events list, score by periods |
+| TestCreateMatch | 4 | Status 201, response ID, match in list, 400 for missing field |
+| TestCompetitions | 2 | Status 200, seeded competition present |
+| TestPages | 3 | index, teams and stats pages return 200 |
+
+python -m pytest tests/ -v
+
 # Startup Instructions
+
+Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+Initialize the database
+
+```bash
+python database.py
+```
+
+Start the server
+```bash
+python app.py
+```
+
+Open http://localhost:8080
