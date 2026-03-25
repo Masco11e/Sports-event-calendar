@@ -37,15 +37,21 @@ pytest - Backend unit and integration tests.
 
 ## Key design decisions (3NF)
 
-_winner_team_id as a foreign key (not a string) The winner field is stored as an INTEGER FK to the teams table, not as a TEXT field containing the name. This ensures that changing a team’s name does not cause update anomalies—it is sufficient to update a single record in the teams table.
+"_winner_team_id" as a foreign key. The winner field in match_result stores an foreign key to the team table, not text containing the team name. Changing a team's name requires updating only one record in the team table—all relationships remain intact.
 
-The seasons table as a separate entity The year, dates, and status of a season depend on the season, not on the match. If they were a field in events, this would violate 3NF due to a transitive dependency: events.id → season_year → season_start_date.
+"stage" as a separate entity The “name” and “ordering” fields for a stage depend on the stage itself, not on the match.
 
-The “countries” table has been separated
-Country codes and names are frequently used by teams and venues. Storing them as
-strings in both tables would violate 3NF and lead to inconsistencies if a country's name
-were to change.
+"_competition_id" as a foreign key in the stage table. The league name and slug depend on the league, not on the competition stage. If they were fields in the stage table, changing the league name would require updating every stage record
 
+"match_group" as a separate entity. The group name is specific to the group, not the match.
+
+"match_result" as a separate entity. The match result (home_goals, away_goals, _winner_team_id) constitutes a separate fact, it may not exist for matches that have not been played.
+
+"score_by_period" as a separate entity. Subsection scores (first half, overtime) depend on the match result, not directly on the match itself. Saving them as columns in "match_result" would prevent the flexible addition of new periods without changing the schema.
+
+"match_event" as a separate entity. Match events (goals, minutes) are repeated multiple times during a single match. 
+
+"_home_team_id" and "_away_team_id" as foreign keys. Team data (official name, abbreviation, country code) is specific to the team, not the match.
 
 # REST API — endpoints
 
