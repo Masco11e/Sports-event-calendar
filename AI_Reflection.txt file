@@ -1,0 +1,13 @@
+AI Usage
+ 
+Large language models were used in this project for:
+
+- Generate a preliminary HTML and CSS framework for the user interface to speed up development work.
+- Generate JavaScript modules (api.js, ui.js, main.js) as a starting point, followed by their verification and customization.
+- Generate the structure of REST API endpoints and implementing routes in Flask.
+- Verify the correctness of tests, and listing and implementing any missing ones.
+- Generate the visual structure of the README documentation, including table layouts and stylistic elements.
+- Review the code for consistency and unnecessary elements.
+ 
+All generated code was reviewed, tested, and manually adjusted. Final decisions regarding the architecture,
+database design, and feature scope were made by the developer.
