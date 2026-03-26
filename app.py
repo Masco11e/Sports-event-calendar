@@ -7,6 +7,7 @@ app= Flask(__name__, template_folder=".", static_folder="src", static_url_path="
 def rows_to_list(rows):
     return [dict(r) for r in rows]
 
+#get list of matches with filters
 @app.get("/api/matches")
 def get_matches():
     competition= request.args.get("competition")
@@ -39,6 +40,7 @@ def get_matches():
     """
     params= []
 
+    #add filter conditions to sql query
     if competition:
         sql += " AND c.id= ?"
         params.append(competition)
@@ -57,6 +59,7 @@ def get_matches():
     conn= get_connection()
     rows= conn.execute(sql, params).fetchall()
 
+    #fetch events for each match
     events_by_match= {}
     if rows:
         ids= [r["id"] for r in rows]
@@ -80,6 +83,7 @@ def get_matches():
 
     return jsonify(result)
 
+#get details of a single match
 @app.get("/api/matches/<int:match_id>")
 def get_match(match_id):
     conn= get_connection()
@@ -104,12 +108,14 @@ def get_match(match_id):
         WHERE m.id= ?
     """, (match_id,)).fetchone()
 
+    #return 404 if match not found
     if not row:
         conn.close()
         abort(404)
 
     data= dict(row)
 
+    #fetch score by periods
     result_row= conn.execute("SELECT id FROM match_result WHERE _match_id= ?", (match_id,)).fetchone()
     if result_row:
         periods= conn.execute("SELECT * FROM score_by_period WHERE _result_id= ?", (result_row["id"],)).fetchall()
@@ -129,6 +135,7 @@ def get_match(match_id):
     conn.close()
     return jsonify(data)
 
+#create a new match
 @app.post("/api/matches")
 def create_match():
     body= request.get_json(force=True)
@@ -144,6 +151,7 @@ def create_match():
     conn= get_connection()
     cur=  conn.cursor()
 
+    #check if competition exists, if not create new one
     existing= cur.execute("SELECT id FROM competition WHERE name= ?", (competition_name,)).fetchone()
     if existing:
         competition_id= existing["id"]
@@ -157,6 +165,7 @@ def create_match():
         cur.execute("INSERT INTO stage (id, _competition_id, name, ordering) VALUES (?, ?, ?, ?)",
             (body["_stage_id"], competition_id, body.get("stage_name", body["_stage_id"]), body.get("stage_ordering", 1)))
 
+    #add home and away teams
     for key in ("home_team", "away_team"):
         team= body.get(key)
         if team and team.get("slug"):
@@ -177,6 +186,7 @@ def create_match():
           body.get("stadium"), body.get("description")))
     match_id= cur.lastrowid
 
+    #add match result if provided
     result= body.get("result")
     if result:
         winner_id= (result.get("winner_id") or
@@ -189,6 +199,7 @@ def create_match():
     conn.close()
     return jsonify({"id": match_id, "message": "Match created successfully"}), 201
 
+#get list of all competitions
 @app.get("/api/competitions")
 def get_competitions():
     conn= get_connection()
@@ -196,6 +207,7 @@ def get_competitions():
     conn.close()
     return jsonify(rows_to_list(rows))
 
+#get list of all stages
 @app.get("/api/stages")
 def get_stages():
     conn= get_connection()
@@ -203,6 +215,7 @@ def get_stages():
     conn.close()
     return jsonify(rows_to_list(rows))
 
+#import matches from json format to database
 @app.post("/api/import")
 def import_matches():
     data= request.get_json(force=True)
@@ -213,6 +226,7 @@ def import_matches():
     cur=  conn.cursor()
     imported= 0
 
+    #loop through each match to import
     for item in data["data"]:
         competition_id=   item.get("originCompetitionId")
         competition_name= item.get("originCompetitionName", competition_id)
@@ -263,6 +277,7 @@ def import_matches():
     conn.close()
     return jsonify({"imported": imported}), 201
 
+#export all matches from database to json format
 @app.get("/api/export")
 def export_matches():
     conn= get_connection()
@@ -288,6 +303,7 @@ def export_matches():
     """).fetchall()
     conn.close()
 
+    #format data to output json format
     data= []
     for r in rows:
         data.append({
@@ -311,6 +327,7 @@ def export_matches():
 
     return jsonify({"data": data})
 
+#serve main page
 @app.get("/")
 def index():
     return render_template("index.html")
@@ -327,6 +344,7 @@ def stats():
 def public_images(filename):
     return send_from_directory(os.path.join(os.path.dirname(__file__), "public", "images"), filename)
 
+#initialize database on first run
 if __name__== "__main__":
     if not os.path.exists(os.path.join(os.path.dirname(__file__), "sports.db")):
         init_db()

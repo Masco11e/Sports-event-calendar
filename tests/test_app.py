@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import database
 from app import app as flask_app
 
+#create isolated test database once per session
 @pytest.fixture(scope="session")
 def test_db(tmp_path_factory):
     db_path= str(tmp_path_factory.mktemp("data") / "test.db")
@@ -13,12 +14,14 @@ def test_db(tmp_path_factory):
     database.seed_db()
     yield db_path
 
+#provide flask test client with testing mode enabled
 @pytest.fixture()
 def client(test_db):
     flask_app.config["TESTING"]= True
     with flask_app.test_client() as c:
         yield c
 
+#database
 class TestDatabase:
     def test_tables_created(self, test_db):
         conn=  database.get_connection()
@@ -63,6 +66,7 @@ class TestDatabase:
             conn.commit()
         conn.close()
 
+#get match
 class TestGetMatches:
     def test_returns_200(self, client):
         assert client.get("/api/matches").status_code == 200
@@ -100,6 +104,7 @@ class TestGetMatches:
         data= json.loads(client.get("/api/matches?status=played").data)
         assert data[0]["home_goals"] is not None
 
+#get match by id
 class TestGetMatch:
     def test_returns_200(self, client):
         match_id= json.loads(client.get("/api/matches").data)[0]["id"]
@@ -119,6 +124,7 @@ class TestGetMatch:
         data=     json.loads(client.get(f"/api/matches/{match_id}").data)
         assert "score_by_periods" in data
 
+#create match
 class TestCreateMatch:
     VALID= {
         "competition_name": "AFC Champions League",
@@ -153,6 +159,7 @@ class TestCreateMatch:
     def test_missing_field_400(self, client):
         assert self.post(client, {"_competition_id": "x"}).status_code == 400
 
+#competitions
 class TestCompetitions:
     def test_returns_200(self, client):
         assert client.get("/api/competitions").status_code == 200
@@ -161,6 +168,7 @@ class TestCompetitions:
         data= json.loads(client.get("/api/competitions").data)
         assert any(c["id"] == "afc-champions-league" for c in data)
 
+#import/export
 class TestImportExport:
     PAYLOAD= {"data": [{
         "season": 2024, "status": "played",
@@ -199,6 +207,7 @@ class TestImportExport:
         for field in ("season","status","dateVenue","timeVenueUTC","stage","originCompetitionId"):
             assert field in record
 
+#pages
 class TestPages:
     def test_index(self, client):
         res= client.get("/")
