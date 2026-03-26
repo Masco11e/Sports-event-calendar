@@ -23,13 +23,13 @@ Python 3/Flask  - Application backend, HTTP server, REST endpoint routing.
 
 SQLite - Relational database, local file, no server configuration.
 
-HTML5/CSS3/JS - Application frontend, Single Page Application without external JavaScript frameworks
+HTML5/CSS/JS - Application frontend, Single Page Application without external JavaScript frameworks
 
 pytest - Backend unit and integration tests.
 
 # Database
 
-
+[Diagram(ERD)](Diagram(ERD).pdf)
 
 ## Key design decisions (3NF)
 
@@ -47,15 +47,21 @@ pytest - Backend unit and integration tests.
 
 "match_event" as a separate entity. Match events (goals, minutes) are repeated multiple times during a single match. 
 
-"_home_team_id" and "_away_team_id" as foreign keys. Team data (official name, abbreviation, country code) is specific to the team, not the match.
+"_home_team_id" and "_away_team_id" as foreign keys. Team data is specific to the team, not the match.
 
 # REST API — endpoints
 
-The Flask backend provides ... REST endpoints. Each endpoint executes no more than 3 SQL queries—data is retrieved using a single SELECT statement with LEFT JOINs that combine all necessary tables at once (no N+1 issues).
+The Flask backend provides 7 REST endpoints.
 
-| Method  | Path  | Description |
-| :--- | :---: | ---: |
-| Komórka 1 | Komórka 2 | Komórka 3 |
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| GET | /api/matches | List all matches, filterable by competition, status, date_from, date_to |
+| GET | /api/matches/\<id> | Single match with full details, events and score by periods |
+| POST | /api/matches | Create a new match. Auto-creates competition if name not found |
+| GET | /api/competitions | List all competitions |
+| GET | /api/stages | List all stages ordered by ordering field |
+| POST | /api/import | Import matches from JSON in the source format |
+| GET | /api/export | Export all matches to JSON in the source format |
 
 # User interface
 
@@ -92,15 +98,17 @@ Install dependencies
 pip install -r requirements.txt
 ```
 
-Initialize the database
-
-```bash
-python database.py
-```
-
 Start the server
 ```bash
 python app.py
 ```
 
 Open http://localhost:8080
+
+Optional 
+
+You can delete and recreate the database if needed
+
+```bash
+python database.py
+```

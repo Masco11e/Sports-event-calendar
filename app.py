@@ -144,7 +144,6 @@ def create_match():
     conn= get_connection()
     cur=  conn.cursor()
 
-    #find existing competition by name or create new one with auto id
     existing= cur.execute("SELECT id FROM competition WHERE name= ?", (competition_name,)).fetchone()
     if existing:
         competition_id= existing["id"]
@@ -203,6 +202,114 @@ def get_stages():
     rows= conn.execute("SELECT * FROM stage ORDER BY ordering").fetchall()
     conn.close()
     return jsonify(rows_to_list(rows))
+
+@app.post("/api/import")
+def import_matches():
+    data= request.get_json(force=True)
+    if not data or "data" not in data:
+        return jsonify({"error": "Missing 'data' key"}), 400
+
+    conn= get_connection()
+    cur=  conn.cursor()
+    imported= 0
+
+    for item in data["data"]:
+        competition_id=   item.get("originCompetitionId")
+        competition_name= item.get("originCompetitionName", competition_id)
+        if not competition_id:
+            continue
+
+        if not cur.execute("SELECT id FROM competition WHERE id= ?", (competition_id,)).fetchone():
+            cur.execute("INSERT INTO competition (id, slug, name) VALUES (?, ?, ?)",
+                (competition_id, competition_id, competition_name))
+
+        stage=    item.get("stage", {})
+        stage_id= stage.get("id")
+        if stage_id and not cur.execute("SELECT id FROM stage WHERE id= ?", (stage_id,)).fetchone():
+            cur.execute("INSERT INTO stage (id, _competition_id, name, ordering) VALUES (?, ?, ?, ?)",
+                (stage_id, competition_id, stage.get("name", stage_id), stage.get("ordering", 1)))
+
+        for key in ("homeTeam", "awayTeam"):
+            team= item.get(key)
+            if team and team.get("slug"):
+                cur.execute("INSERT OR IGNORE INTO team (id, name, official_name, slug, abbreviation, country_code) VALUES (?,?,?,?,?,?)",
+                    (team["slug"], team.get("name",""), team.get("officialName",""),
+                     team["slug"], team.get("abbreviation",""), team.get("teamCountryCode","")))
+
+        home_id= item.get("homeTeam",{}).get("slug") if item.get("homeTeam") else None
+        away_id= item.get("awayTeam",{}).get("slug") if item.get("awayTeam") else None
+
+        cur.execute("""
+            INSERT INTO match (_competition_id,_stage_id,_group_id,_home_team_id,_away_team_id,
+                season,date_venue,time_venue_utc,status,stadium)
+            VALUES (?,?,?,?,?,?,?,?,?,?)""", 
+            (competition_id, stage_id, None, home_id, away_id,
+              item.get("season"), item.get("dateVenue"),
+              item.get("timeVenueUTC","00:00:00"), item.get("status","scheduled"),
+              item.get("stadium")))
+        match_id= cur.lastrowid
+
+        result= item.get("result")
+        if result and item.get("status") == "played":
+            winner_name= result.get("winner")
+            winner_id= (away_id if winner_name == item.get("awayTeam",{}).get("name") else
+                        home_id if winner_name == item.get("homeTeam",{}).get("name") else None)
+            cur.execute("INSERT OR IGNORE INTO match_result (_match_id,home_goals,away_goals,_winner_team_id,message) VALUES (?,?,?,?,?)",
+                (match_id, result.get("homeGoals",0), result.get("awayGoals",0), winner_id, result.get("message")))
+
+        imported += 1
+
+    conn.commit()
+    conn.close()
+    return jsonify({"imported": imported}), 201
+
+@app.get("/api/export")
+def export_matches():
+    conn= get_connection()
+    rows= conn.execute("""
+        SELECT
+            m.season, m.status, m.time_venue_utc AS timeVenueUTC,
+            m.date_venue AS dateVenue, m.stadium,
+            ht.name AS home_name, ht.official_name AS home_official,
+            ht.slug AS home_slug, ht.abbreviation AS home_abbr, ht.country_code AS home_country,
+            at.name AS away_name, at.official_name AS away_official,
+            at.slug AS away_slug, at.abbreviation AS away_abbr, at.country_code AS away_country,
+            mr.home_goals, mr.away_goals, wt.name AS winner,
+            s.id AS stage_id, s.name AS stage_name, s.ordering AS stage_ordering,
+            c.id AS competition_id, c.name AS competition_name
+        FROM match m
+        JOIN competition c ON m._competition_id= c.id
+        JOIN stage s ON m._stage_id= s.id
+        LEFT JOIN team ht ON m._home_team_id= ht.id
+        LEFT JOIN team at ON m._away_team_id= at.id
+        LEFT JOIN match_result mr ON mr._match_id= m.id
+        LEFT JOIN team wt ON mr._winner_team_id= wt.id
+        ORDER BY m.date_venue, m.time_venue_utc
+    """).fetchall()
+    conn.close()
+
+    data= []
+    for r in rows:
+        data.append({
+            "season":    r["season"],
+            "status":    r["status"],
+            "timeVenueUTC": r["timeVenueUTC"],
+            "dateVenue": r["dateVenue"],
+            "stadium":   r["stadium"],
+            "homeTeam": {"name": r["home_name"], "officialName": r["home_official"],
+                         "slug": r["home_slug"], "abbreviation": r["home_abbr"],
+                         "teamCountryCode": r["home_country"]} if r["home_slug"] else None,
+            "awayTeam": {"name": r["away_name"], "officialName": r["away_official"],
+                         "slug": r["away_slug"], "abbreviation": r["away_abbr"],
+                         "teamCountryCode": r["away_country"]} if r["away_slug"] else None,
+            "result": {"homeGoals": r["home_goals"], "awayGoals": r["away_goals"],
+                       "winner": r["winner"]} if r["home_goals"] is not None else None,
+            "stage": {"id": r["stage_id"], "name": r["stage_name"], "ordering": r["stage_ordering"]},
+            "originCompetitionId":   r["competition_id"],
+            "originCompetitionName": r["competition_name"],
+        })
+
+    return jsonify({"data": data})
 
 @app.get("/")
 def index():

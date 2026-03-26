@@ -74,7 +74,7 @@
             <div class="form_row">
                 <div class="form_group">
                     <label class="form_label">Competition Name *</label>
-                    <input class="form_input" name="competition_name" placeholder="e.g. AFC Champions League" required />
+                    <input class="form_input" name="competition_name" placeholder=": AFC Champions League" required />
                 </div>
             </div>
             <div class="form_row">
@@ -89,7 +89,7 @@
                 </div>
                 <div class="form_group">
                     <label class="form_label">Season *</label>
-                    <input class="form_input" name="season" type="number" placeholder="e.g. 2024" required />
+                    <input class="form_input" name="season" type="number" placeholder=": 2026" required />
                 </div>
                 <div class="form_group">
                     <label class="form_label">Status *</label>
@@ -119,38 +119,38 @@
             <div class="form_row">
                 <div class="form_group">
                     <label class="form_label">Name</label>
-                    <input class="form_input" name="home_name" placeholder="e.g. Al Hilal" />
+                    <input class="form_input" name="home_name" placeholder=": Al Hilal" />
                 </div>
                 <div class="form_group">
                     <label class="form_label">Slug (ID)</label>
-                    <input class="form_input" name="home_slug" placeholder="e.g. al-hilal-fc" />
+                    <input class="form_input" name="home_slug" placeholder=": al-hilal-fc" />
                 </div>
                 <div class="form_group">
                     <label class="form_label">Abbr</label>
                     <input class="form_input" name="home_abbr" maxlength="5" placeholder="HIL" />
                 </div>
                 <div class="form_group">
-                    <label class="form_label">Country</label>
-                    <input class="form_input" name="home_country" maxlength="3" placeholder="KSA" />
+                    <label class="form_label">Country <span style="font-weight:400;text-transform:none;letter-spacing:0">(ISO code)</span></label>
+                    <input class="form_input" name="home_country" maxlength="3" placeholder=": POL, KSA, DEU" title="Enter 3-letter ISO country code, : POL for Poland, DEU for Germany, BRA for Brazil" />
                 </div>
             </div>
             <p class="form_section_title">Away Team</p>
             <div class="form_row">
                 <div class="form_group">
                     <label class="form_label">Name</label>
-                    <input class="form_input" name="away_name" placeholder="e.g. Urawa Reds" />
+                    <input class="form_input" name="away_name" placeholder=": Urawa Reds" />
                 </div>
                 <div class="form_group">
                     <label class="form_label">Slug (ID)</label>
-                    <input class="form_input" name="away_slug" placeholder="e.g. urawa-reds-fc" />
+                    <input class="form_input" name="away_slug" placeholder=": urawa-reds-fc" />
                 </div>
                 <div class="form_group">
                     <label class="form_label">Abbr</label>
                     <input class="form_input" name="away_abbr" maxlength="5" placeholder="RED" />
                 </div>
                 <div class="form_group">
-                    <label class="form_label">Country</label>
-                    <input class="form_input" name="away_country" maxlength="3" placeholder="JPN" />
+                    <label class="form_label">Country <span style="font-weight:400;text-transform:none;letter-spacing:0">(ISO code)</span></label>
+                    <input class="form_input" name="away_country" maxlength="3" placeholder=": POL, KSA, DEU" title="Enter 3-letter ISO country code, : POL for Poland, DEU for Germany, BRA for Brazil" />
                 </div>
             </div>
             <div id="formError" class="form_error hidden"></div>
